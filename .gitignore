@@ -42,3 +42,6 @@
 
 # Phpstorm folder
 .idea/
+
+# Vendors
+/vendor/
