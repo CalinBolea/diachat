@@ -19,8 +19,8 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class FacebookController extends AbstractController
 {
-    private const CHALLENGE_TOKEN_NAME = 'hub.challenge';
-    private const VERIFY_TOKEN_NAME = 'hub.verify_token';
+    private const CHALLENGE_TOKEN_NAME = 'hub_challenge';
+    private const VERIFY_TOKEN_NAME = 'hub_verify_token';
 
     /** @var Client */
     private $httpClient;
