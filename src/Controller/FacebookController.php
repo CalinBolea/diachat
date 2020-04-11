@@ -75,7 +75,14 @@ class FacebookController extends AbstractController
 
                 foreach ($item as $message) {
                     $senderId = $message['sender']['id'];
-                    $messageText = $message['message']['text'];
+                    $messageText = $message['message']['text'] ?? false;
+
+                    if (!$messageText) {
+                        $this->logger->warning('No messages for this event, nodes available: ' . json_encode(array_keys($message)));
+
+                        continue;
+                    }
+
                     $response = $this->generateRandomString();
                     $this->logger->info("Diachat received message <<< $messageText >>> from user $senderId");
 
