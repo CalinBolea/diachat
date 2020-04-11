@@ -19,7 +19,8 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class FacebookController extends AbstractController
 {
-    private const CHALLENGE_NAME = 'hub.challenge';
+    private const CHALLENGE_TOKEN_NAME = 'hub.challenge';
+    private const VERIFY_TOKEN_NAME = 'hub.verify_token';
 
     /** @var Client */
     private $httpClient;
@@ -38,17 +39,16 @@ class FacebookController extends AbstractController
      */
     public function verifyChallenge(Request $request): JsonResponse
     {
-        $receivedToken = $request->query->get(self::CHALLENGE_NAME);
-
-        if ($receivedToken !== $this->getParameter('diachat_verify_token')) {
-            $this->logger->warning("Facebook challenge verification failed for token: $receivedToken");
+        $verificationToken = $request->query->get(self::VERIFY_TOKEN_NAME);
+        if ($verificationToken !== $this->getParameter('diachat_verify_token')) {
+            $this->logger->warning("Facebook challenge verification failed for token: $verificationToken");
 
             return new JsonResponse('Get outta here with your piece of shit token!', 403);
         }
 
         $this->logger->info('Facebook challenge verification succeeded.');
 
-        return new JsonResponse('Verified');
+        return new JsonResponse($request->query->get(self::CHALLENGE_TOKEN_NAME));
     }
 
     /**
