@@ -56,7 +56,9 @@ class FacebookController extends AbstractController
      */
     public function sendMessage(Request $request): Response
     {
-        $payload = json_decode($request->getContent(), true);
+        $content = $request->getContent();
+        $this->logger->info('Received content: ' . $content);
+        $payload = json_decode($content, true);
         if ('page' !== $payload['object'] ?? null) {
             $this->logger->warning('No page object detected in payload');
 
