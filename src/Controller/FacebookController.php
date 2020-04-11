@@ -6,8 +6,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -37,30 +37,30 @@ class FacebookController extends AbstractController
     /**
      * @Route("/", methods={"GET"}, name="verify")
      */
-    public function verifyChallenge(Request $request): JsonResponse
+    public function verifyChallenge(Request $request): Response
     {
         $verificationToken = $request->query->get(self::VERIFY_TOKEN_NAME);
         if ($verificationToken !== $this->getParameter('diachat_verify_token')) {
             $this->logger->warning("Facebook challenge verification failed for token: $verificationToken");
 
-            return new JsonResponse('Get outta here with your piece of shit token!', 403);
+            return new Response('Get outta here with your piece of shit token!', 403);
         }
 
         $this->logger->info('Facebook challenge verification succeeded.');
 
-        return new JsonResponse($request->query->get(self::CHALLENGE_TOKEN_NAME));
+        return new Response($request->query->get(self::CHALLENGE_TOKEN_NAME));
     }
 
     /**
      * @Route("/", methods={"POST"}, name="send_message")
      */
-    public function sendMessage(Request $request): JsonResponse
+    public function sendMessage(Request $request): Response
     {
         $payload = json_decode($request->getContent(), true);
         if ('page' !== $payload['object'] ?? null) {
             $this->logger->warning('No page object detected in payload');
 
-            return new JsonResponse('No page object, no service... for some reason', 403);
+            return new Response('No page object, no service... for some reason', 403);
         }
 
         $entries = $payload['entry'] ?? [];
@@ -93,14 +93,14 @@ class FacebookController extends AbstractController
                     $confirmationMessage = "Message <<< $response >>> sent to user id $senderId";
                     $this->logger->info($confirmationMessage);
 
-                    return new JsonResponse($confirmationMessage);
+                    return new Response($confirmationMessage);
                 }
             }
         }
 
         $this->logger->warning('No messages were sent');
 
-        return new JsonResponse('Dunno mate, no messages or something...');
+        return new Response('Dunno mate, no messages or something...');
     }
 
     private function generateRandomString(): string
