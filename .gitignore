@@ -45,3 +45,6 @@
 
 # Vendors
 /vendor/
+
+# .env
+/.env.local
