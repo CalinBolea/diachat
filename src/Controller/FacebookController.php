@@ -58,7 +58,6 @@ class FacebookController extends AbstractController
     public function sendMessage(Request $request): Response
     {
         $content = $request->getContent();
-        $this->logger->info('Received content: ' . $content);
         $payload = json_decode($content, true);
         if ('page' !== $payload['object'] ?? null) {
             $this->logger->warning('No page object detected in payload');
@@ -66,61 +65,62 @@ class FacebookController extends AbstractController
             return new Response('No page object, no service... for some reason', 403);
         }
 
+        $this->logger->info('Received content: ' . $content);
         $entries = $payload['entry'] ?? [];
 
-        foreach ($entries as $entry) {
-            foreach ($entry as $type => $item) {
-                if ('messaging' !== $type) {
-                    continue;
-                }
-
-                foreach ($item as $message) {
-                    $senderId = $message['sender']['id'];
-                    $messageText = $message['message']['text'] ?? false;
-
-                    if (!$messageText) {
-                        $this->logger->warning('No messages for this event, nodes available: ' . json_encode(array_keys($message)));
-
-                        continue;
-                    }
-
-                    $response = $this->generateRandomString();
-                    $this->logger->info("Diachat received message <<< $messageText >>> from user $senderId");
-
-                    try {
-                        $this->httpClient->request(Request::METHOD_POST, $this->getParameter('facebook_message_endpoint'), [
-                            RequestOptions::HEADERS => [
-                                'Content-Type' => 'application/json'
-                            ],
-                            RequestOptions::QUERY => [
-                                'access_token' => $this->getParameter('diachat_access_token'),
-                            ],
-                            RequestOptions::BODY => json_encode([
-                                'recipient' => ['id' => $senderId],
-                                'message' => ['text' => $response],
-                            ])
-                        ]);
-                    } catch (ClientException $e) {
-                        $context = [
-                            'code' => $e->getCode(),
-                            'trace' => $e->getTraceAsString(),
-                        ];
-                        $response = $e->getResponse();
-
-                        if ($response) {
-                            $context['body'] = $response->getBody();
-                        }
-
-                        $this->logger->critical($e->getMessage(), $context);
-                    }
-
-                    $confirmationMessage = "Message <<< $response >>> sent to user id $senderId";
-                    $this->logger->info($confirmationMessage);
-
-                    return new Response($confirmationMessage);
-                }
-            }
-        }
+//        foreach ($entries as $entry) {
+//            foreach ($entry as $type => $item) {
+//                if ('messaging' !== $type) {
+//                    continue;
+//                }
+//
+//                foreach ($item as $message) {
+//                    $senderId = $message['sender']['id'];
+//                    $messageText = $message['message']['text'] ?? false;
+//
+//                    if (!$messageText) {
+//                        $this->logger->warning('No messages for this event, nodes available: ' . json_encode(array_keys($message)));
+//
+//                        continue;
+//                    }
+//
+//                    $response = $this->generateRandomString();
+//                    $this->logger->info("Diachat received message <<< $messageText >>> from user $senderId");
+//
+//                    try {
+//                        $this->httpClient->request(Request::METHOD_POST, $this->getParameter('facebook_message_endpoint'), [
+//                            RequestOptions::HEADERS => [
+//                                'Content-Type' => 'application/json'
+//                            ],
+//                            RequestOptions::QUERY => [
+//                                'access_token' => $this->getParameter('diachat_access_token'),
+//                            ],
+//                            RequestOptions::BODY => json_encode([
+//                                'recipient' => ['id' => $senderId],
+//                                'message' => ['text' => $response],
+//                            ])
+//                        ]);
+//                    } catch (ClientException $e) {
+//                        $context = [
+//                            'code' => $e->getCode(),
+//                            'trace' => $e->getTraceAsString(),
+//                        ];
+//                        $response = $e->getResponse();
+//
+//                        if ($response) {
+//                            $context['body'] = $response->getBody();
+//                        }
+//
+//                        $this->logger->critical($e->getMessage(), $context);
+//                    }
+//
+//                    $confirmationMessage = "Message <<< $response >>> sent to user id $senderId";
+//                    $this->logger->info($confirmationMessage);
+//
+//                    return new Response($confirmationMessage);
+//                }
+//            }
+//        }
 
         $this->logger->warning('No messages were sent');
 
