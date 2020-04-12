@@ -101,23 +101,18 @@ class FacebookController extends AbstractController
                             ])
                         ]);
                     } catch (ClientException $e) {
-                        $this->logger->critical($e->getMessage(), [
+                        $context = [
                             'code' => $e->getCode(),
                             'trace' => $e->getTraceAsString(),
-                        ]);
+                        ];
+                        $response = $e->getResponse();
+
+                        if ($response) {
+                            $context['body'] = $response->getBody();
+                        }
+
+                        $this->logger->critical($e->getMessage(), $context);
                     }
-                    $this->httpClient->request(Request::METHOD_POST, $this->getParameter('facebook_message_endpoint'), [
-                        RequestOptions::HEADERS => [
-                            'Content-Type' => 'application/json'
-                        ],
-                        RequestOptions::QUERY => [
-                            'access_token' => $this->getParameter('diachat_access_token'),
-                        ],
-                        RequestOptions::BODY => json_encode([
-                            'recipient' => ['id' => $senderId],
-                            'message' => ['text' => $response],
-                        ])
-                    ]);
 
                     $confirmationMessage = "Message <<< $response >>> sent to user id $senderId";
                     $this->logger->info($confirmationMessage);
