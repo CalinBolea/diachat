@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\RequestOptions;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -86,6 +87,25 @@ class FacebookController extends AbstractController
                     $response = $this->generateRandomString();
                     $this->logger->info("Diachat received message <<< $messageText >>> from user $senderId");
 
+                    try {
+                        $this->httpClient->request(Request::METHOD_POST, $this->getParameter('facebook_message_endpoint'), [
+                            RequestOptions::HEADERS => [
+                                'Content-Type' => 'application/json'
+                            ],
+                            RequestOptions::QUERY => [
+                                'access_token' => $this->getParameter('diachat_access_token'),
+                            ],
+                            RequestOptions::BODY => json_encode([
+                                'recipient' => ['id' => $senderId],
+                                'message' => ['text' => $response],
+                            ])
+                        ]);
+                    } catch (ClientException $e) {
+                        $this->logger->critical($e->getMessage(), [
+                            'code' => $e->getCode(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
                     $this->httpClient->request(Request::METHOD_POST, $this->getParameter('facebook_message_endpoint'), [
                         RequestOptions::HEADERS => [
                             'Content-Type' => 'application/json'
